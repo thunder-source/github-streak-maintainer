@@ -1,0 +1,12 @@
+{
+  "name": "github-streak-maintainer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal Node.js project for maintaining a GitHub contribution streak with GitHub Actions.",
+  "scripts": {
+    "streak": "node scripts/streak.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

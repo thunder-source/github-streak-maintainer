@@ -1,0 +1,52 @@
+name: Daily Streak
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2,10,18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: streak-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  commit-streak:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Create daily record
+        run: node scripts/streak.js
+
+      - name: Configure Git identity
+        env:
+          STREAK_GIT_NAME: ${{ vars.STREAK_GIT_NAME }}
+          STREAK_GIT_EMAIL: ${{ vars.STREAK_GIT_EMAIL }}
+          DEFAULT_NAME: ${{ github.actor }}
+        run: |
+          if [ -z "$STREAK_GIT_EMAIL" ]; then
+            echo "Missing repo variable STREAK_GIT_EMAIL."
+            exit 1
+          fi
+          git config user.name "${STREAK_GIT_NAME:-$DEFAULT_NAME}"
+          git config user.email "$STREAK_GIT_EMAIL"
+
+      - name: Commit and push if needed
+        run: |
+          git add data/daily
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: daily streak update"
+          git push
